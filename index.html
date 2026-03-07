@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Price List - ARSHAD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root { --blue: #0046ad; --red: #d93025; --text: #333; }
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; color: var(--text); }
+        
+        .container { max-width: 800px; margin: auto; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        
+        .header { background: var(--blue); color: white; padding: 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
+        .header p { margin: 5px 0 0; opacity: 0.9; font-size: 13px; }
+
+        .search-box { padding: 15px; background: #fffde7; border-bottom: 1px solid #eee; }
+        #searchInput { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; }
+        #searchInput:focus { border-color: var(--blue); }
+
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 400px; }
+        th { background: #f8f9fa; color: var(--blue); text-align: left; padding: 12px 15px; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #eee; }
+        td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:nth-child(even) { background: #fafafa; }
+        tr:hover { background: #f1f4f9; }
+
+        .code-cell { font-family: monospace; font-weight: bold; color: var(--red); }
+        .price-cell { font-weight: bold; text-align: right; color: #2e7d32; }
+
+        .actions { padding: 20px; text-align: center; background: #f8f9fa; }
+        .btn-pdf { background: var(--red); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; width: 100%; }
+        
+        .footer { text-align: center; padding: 20px; font-size: 11px; color: #888; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Liste des Produits</h1>
+        <p>Système d'Inventaire Global — ARSHAD</p>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Rechercher un produit ou un code..." onkeyup="filterTable()">
+    </div>
+
+    <div class="table-wrapper">
+        <table id="productTable">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Désignation</th>
+                    <th style="text-align: right;">Prix Unit.</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+    </div>
+
+    <div class="actions">
+        <button class="btn-pdf" onclick="generatePDF()">📄 EXPORTER EN PDF</button>
+    </div>
+</div>
+
+<div class="footer">
+    Developed by: <b>ARSHAD</b> | 2026 Active Catalog
+</div>
+
+<script>
+    const products = [
+        {code: "DRC1201", name: "GINKO GINSENG COFFEE", price: 13.00},
+        {code: "DRC1202", name: "GREEN TEA GANO COFFEE", price: 14.00},
+        {code: "DRC1203", name: "KACIP FATIMA GANO COFFEE", price: 14.00},
+        {code: "DRC1204", name: "TONGKAT MACCA COFFEE", price: 14.00},
+        {code: "DRC1205", name: "CAPPUCCINO GANO COFFEE", price: 15.00},
+        {code: "DRC1802A", name: "ALFALFA GUARANA 500ML", price: 20.00},
+        {code: "DRC1804", name: "GANODERMA COFFEE (20s)", price: 11.00},
+        {code: "DRC1810", name: "YEE GANO 90s", price: 23.00},
+        {code: "DRC1811", name: "YEEGARLIC 90's", price: 23.00},
+        {code: "DRC1814", name: "GANO CHOCOLATE 30s", price: 19.00},
+        {code: "DRC1817", name: "PRESIDENT COFFEE 4 IN 1", price: 15.00},
+        {code: "DRC1818", name: "BLACK TONGKAT ALI COFFEE", price: 14.00},
+        {code: "DRC2802", name: "GOAT MILK TABS 150's", price: 16.00},
+        {code: "DRC2804", name: "SOYBEAN POWDER", price: 17.00},
+        {code: "DRC2805", name: "SOLUBLE SPIRULLINA", price: 17.00},
+        {code: "DRC2807", name: "SPIRULINA (300's)", price: 22.00},
+        {code: "DRC2812", name: "HERBA MAHARANI", price: 36.00},
+        {code: "DRC2813", name: "GINGER SOYBEAN", price: 14.00},
+        {code: "DRC2814", name: "GOAT MILK PREMIX", price: 15.00},
+        {code: "DRC3804", name: "DYNA TONIC 780ml", price: 33.00},
+        {code: "DRC3809", name: "YEE YANG YEN 90's", price: 23.00},
+        {code: "DRC3810", name: "RED GINSENG COFFEE", price: 13.00},
+        {code: "DRC3812", name: "GREEN TEA CAPSULE 60's", price: 23.00},
+        {code: "DRC3814", name: "PROLINK 20's", price: 36.00},
+        {code: "DRC4803", name: "GINSENG HONEY & GINGER", price: 17.00},
+        {code: "DRC4805", name: "GINSENG CAPSULE 90s", price: 31.00},
+        {code: "DRC4810", name: "TONGKAT ALI COFFEE (20s)", price: 11.00},
+        {code: "DRC4811", name: "GINALI CAPSULE 100's", price: 27.00},
+        {code: "DRC4815", name: "YEEGINKGO TABLET 90's", price: 23.00},
+        {code: "DRC4817", name: "MILK THISTLE 120's", price: 36.00},
+        {code: "DRC4821", name: "TONGKAT ALI 100's", price: 21.00},
+        {code: "DRC4824", name: "SEA CUCUMBER JELLY", price: 31.00},
+        {code: "DRC5802N", name: "NONI 500ml", price: 26.00},
+        {code: "DRC5803", name: "NONI PLUS TEA 30's", price: 19.00},
+        {code: "DRC5806", name: "DYNA 'S' TABLET 120's", price: 21.00},
+        {code: "DRC9918", name: "DYNA SERENOA 100's", price: 32.00}
+    ];
+
+    function displayProducts() {
+        const body = document.getElementById('tableBody');
+        body.innerHTML = products.map(p => `
+            <tr>
+                <td class="code-cell">${p.code}</td>
+                <td>${p.name}</td>
+                <td class="price-cell">$${p.price.toFixed(2)}</td>
+            </tr>
+        `).join('');
+    }
+
+    function filterTable() {
+        const query = document.getElementById('searchInput').value.toUpperCase();
+        const rows = document.getElementById('tableBody').getElementsByTagName('tr');
+        for (let row of rows) {
+            const text = row.textContent.toUpperCase();
+            row.style.display = text.includes(query) ? "" : "none";
+        }
+    }
+
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.setTextColor(217, 48, 37);
+        doc.text("LISTE OFFICIELLE DES PRODUITS", 105, 20, { align: "center" });
+        
+        const tableData = products.map(p => [p.code, p.name, "$" + p.price.toFixed(2)]);
+        doc.autoTable({
+            startY: 30,
+            head: [['CODE', 'DÉSIGNATION', 'PRIX']],
+            body: tableData,
+            headStyles: { fillColor: [0, 70, 173] }
+        });
+        doc.save("Liste_Produits_Arshad.pdf");
+    }
+
+    displayProducts();
+</script>
+
+</body>
+</html>
