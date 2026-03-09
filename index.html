@@ -2,37 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Price List - ARSHAD</title>
+    <title>Management Stock - ARSHAD</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
-        :root { --blue: #0046ad; --red: #d93025; --text: #333; }
+        :root { --blue: #0046ad; --red: #d93025; --green: #2e7d32; --text: #333; }
         body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; color: var(--text); }
         
-        .container { max-width: 950px; margin: auto; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .container { max-width: 1000px; margin: auto; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
         
         .header { background: var(--blue); color: white; padding: 20px; text-align: center; }
-        .header h1 { margin: 0; font-size: 22px; text-transform: uppercase; letter-spacing: 1px; }
-        .header p { margin: 5px 0 0; opacity: 0.9; font-size: 13px; }
-
+        .header h1 { margin: 0; font-size: 22px; text-transform: uppercase; }
+        
         .search-box { padding: 15px; background: #fffde7; border-bottom: 1px solid #eee; }
-        #searchInput { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; }
-        #searchInput:focus { border-color: var(--blue); }
+        #searchInput { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
 
         .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th { background: #f8f9fa; color: var(--blue); text-align: left; padding: 12px 15px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; }
-        td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 13px; }
-        tr:nth-child(even) { background: #fafafa; }
-        tr:hover { background: #f1f4f9; }
-
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        th { background: #f8f9fa; color: var(--blue); padding: 12px 10px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; text-align: left; }
+        td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+        
+        /* Input Styling */
+        .qty-input { width: 60px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-weight: bold; }
+        .qty-input:focus { border-color: var(--blue); outline: none; background: #e3f2fd; }
+        
+        .remaining-val { font-weight: bold; color: var(--red); text-align: center; }
         .code-cell { font-family: monospace; font-weight: bold; color: var(--red); }
-        .price-cell { font-weight: bold; text-align: right; color: #2e7d32; }
-        .stock-cell { text-align: center; font-weight: bold; color: #555; }
+        .price-cell { font-weight: bold; text-align: right; color: var(--green); }
 
-        .actions { padding: 20px; text-align: center; background: #f8f9fa; }
-        .btn-pdf { background: var(--red); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; width: 100%; }
+        .actions { padding: 20px; display: grid; grid-template-columns: 1fr; gap: 10px; background: #f8f9fa; }
+        .btn-pdf { background: var(--red); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .btn-pdf:hover { background: #b71c1c; }
         
         .footer { text-align: center; padding: 20px; font-size: 11px; color: #888; }
     </style>
@@ -41,12 +42,12 @@
 
 <div class="container">
     <div class="header">
-        <h1>Liste des Produits & Stock</h1>
-        <p>Système d'Inventaire Global — ARSHAD</p>
+        <h1>Gestion de Stock Journalière</h1>
+        <p>ARSHAD — Daily Inventory Control</p>
     </div>
 
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Rechercher un produit, code ou stock..." onkeyup="filterTable()">
+        <input type="text" id="searchInput" placeholder="Rechercher un produit..." onkeyup="filterTable()">
     </div>
 
     <div class="table-wrapper">
@@ -56,81 +57,92 @@
                     <th>Code</th>
                     <th>Désignation</th>
                     <th style="text-align: center;">Stock Initial</th>
-                    <th style="text-align: center;">AFM</th>
-                    <th style="text-align: center;">Stock Restant</th>
+                    <th style="text-align: center;">Vendu (Sold)</th>
+                    <th style="text-align: center;">Restant</th>
                     <th style="text-align: right;">Prix Unit.</th>
                 </tr>
             </thead>
-            <tbody id="tableBody">
-                </tbody>
+            <tbody id="tableBody"></tbody>
         </table>
     </div>
 
     <div class="actions">
-        <button class="btn-pdf" onclick="generatePDF()">📄 EXPORTER EN PDF</button>
+        <button class="btn-pdf" onclick="generatePDF()">📄 GENERER RAPPORT PDF POUR PATRON</button>
     </div>
 </div>
 
 <div class="footer">
-    Developed by: <b>ARSHAD</b> | 2026 Active Catalog
+    Developed by: <b>ARSHAD</b> | System Live Update 2026
 </div>
 
 <script>
-    // Added stockInitial and afm. stockRemaining is calculated automatically.
     const products = [
-        {code: "DRC1201", name: "GINKO GINSENG COFFEE", initial: 100, afm: 20, price: 13.00},
-        {code: "DRC1202", name: "GREEN TEA GANO COFFEE", initial: 100, afm: 10, price: 14.00},
-        {code: "DRC1203", name: "KACIP FATIMA GANO COFFEE", initial: 50, afm: 5, price: 14.00},
-        {code: "DRC1204", name: "TONGKAT MACCA COFFEE", initial: 60, afm: 12, price: 14.00},
-        {code: "DRC1205", name: "CAPPUCCINO GANO COFFEE", initial: 80, afm: 8, price: 15.00},
-        {code: "DRC1802A", name: "ALFALFA GUARANA 500ML", initial: 40, afm: 4, price: 20.00},
-        {code: "DRC1804", name: "GANODERMA COFFEE (20s)", initial: 200, afm: 50, price: 11.00},
-        {code: "DRC1810", name: "YEE GANO 90s", initial: 30, afm: 2, price: 23.00},
-        {code: "DRC1811", name: "YEEGARLIC 90's", initial: 30, afm: 5, price: 23.00},
-        {code: "DRC1814", name: "GANO CHOCOLATE 30s", initial: 90, afm: 15, price: 19.00},
-        {code: "DRC1817", name: "PRESIDENT COFFEE 4 IN 1", initial: 70, afm: 10, price: 15.00},
-        {code: "DRC1818", name: "BLACK TONGKAT ALI COFFEE", initial: 100, afm: 25, price: 14.00},
-        {code: "DRC2802", name: "GOAT MILK TABS 150's", initial: 45, afm: 5, price: 16.00},
-        {code: "DRC2804", name: "SOYBEAN POWDER", initial: 55, afm: 10, price: 17.00},
-        {code: "DRC2805", name: "SOLUBLE SPIRULLINA", initial: 40, afm: 8, price: 17.00},
-        {code: "DRC2807", name: "SPIRULINA (300's)", initial: 25, afm: 3, price: 22.00},
-        {code: "DRC2812", name: "HERBA MAHARANI", initial: 20, afm: 1, price: 36.00},
-        {code: "DRC2813", name: "GINGER SOYBEAN", initial: 60, afm: 12, price: 14.00},
-        {code: "DRC2814", name: "GOAT MILK PREMIX", initial: 80, afm: 20, price: 15.00},
-        {code: "DRC3804", name: "DYNA TONIC 780ml", initial: 15, afm: 2, price: 33.00},
-        {code: "DRC3809", name: "YEE YANG YEN 90's", initial: 20, afm: 4, price: 23.00},
-        {code: "DRC3810", name: "RED GINSENG COFFEE", initial: 110, afm: 30, price: 13.00},
-        {code: "DRC3812", name: "GREEN TEA CAPSULE 60's", initial: 40, afm: 5, price: 23.00},
-        {code: "DRC3814", name: "PROLINK 20's", initial: 10, afm: 0, price: 36.00},
-        {code: "DRC4803", name: "GINSENG HONEY & GINGER", initial: 50, afm: 10, price: 17.00},
-        {code: "DRC4805", name: "GINSENG CAPSULE 90s", initial: 30, afm: 5, price: 31.00},
-        {code: "DRC4810", name: "TONGKAT ALI COFFEE (20s)", initial: 150, afm: 40, price: 11.00},
-        {code: "DRC4811", name: "GINALI CAPSULE 100's", initial: 25, afm: 2, price: 27.00},
-        {code: "DRC4815", name: "YEEGINKGO TABLET 90's", initial: 40, afm: 8, price: 23.00},
-        {code: "DRC4817", name: "MILK THISTLE 120's", initial: 15, afm: 1, price: 36.00},
-        {code: "DRC4821", name: "TONGKAT ALI 100's", initial: 20, afm: 3, price: 21.00},
-        {code: "DRC4824", name: "SEA CUCUMBER JELLY", initial: 30, afm: 5, price: 31.00},
-        {code: "DRC5802N", name: "NONI 500ml", initial: 25, afm: 4, price: 26.00},
-        {code: "DRC5803", name: "NONI PLUS TEA 30's", initial: 50, afm: 10, price: 19.00},
-        {code: "DRC5806", name: "DYNA 'S' TABLET 120's", initial: 40, afm: 6, price: 21.00},
-        {code: "DRC9918", name: "DYNA SERENOA 100's", initial: 15, afm: 2, price: 32.00}
+        {code: "DRC1201", name: "GINKO GINSENG COFFEE", initial: 0, sold: 0, price: 13.00},
+        {code: "DRC1202", name: "GREEN TEA GANO COFFEE", initial: 0, sold: 0, price: 14.00},
+        {code: "DRC1203", name: "KACIP FATIMA GANO COFFEE", initial: 0, sold: 0, price: 14.00},
+        {code: "DRC1204", name: "TONGKAT MACCA COFFEE", initial: 0, sold: 0, price: 14.00},
+        {code: "DRC1205", name: "CAPPUCCINO GANO COFFEE", initial: 0, sold: 0, price: 15.00},
+        {code: "DRC1802A", name: "ALFALFA GUARANA 500ML", initial: 0, sold: 0, price: 20.00},
+        {code: "DRC1804", name: "GANODERMA COFFEE (20s)", initial: 0, sold: 0, price: 11.00},
+        {code: "DRC1810", name: "YEE GANO 90s", initial: 0, sold: 0, price: 23.00},
+        {code: "DRC1811", name: "YEEGARLIC 90's", initial: 0, sold: 0, price: 23.00},
+        {code: "DRC1814", name: "GANO CHOCOLATE 30s", initial: 0, sold: 0, price: 19.00},
+        {code: "DRC1817", name: "PRESIDENT COFFEE 4 IN 1", initial: 0, sold: 0, price: 15.00},
+        {code: "DRC1818", name: "BLACK TONGKAT ALI COFFEE", initial: 0, sold: 0, price: 14.00},
+        {code: "DRC2802", name: "GOAT MILK TABS 150's", initial: 0, sold: 0, price: 16.00},
+        {code: "DRC2804", name: "SOYBEAN POWDER", initial: 0, sold: 0, price: 17.00},
+        {code: "DRC2805", name: "SOLUBLE SPIRULLINA", initial: 0, sold: 0, price: 17.00},
+        {code: "DRC2807", name: "SPIRULINA (300's)", initial: 0, sold: 0, price: 22.00},
+        {code: "DRC2812", name: "HERBA MAHARANI", initial: 0, sold: 0, price: 36.00},
+        {code: "DRC2813", name: "GINGER SOYBEAN", initial: 0, sold: 0, price: 14.00},
+        {code: "DRC2814", name: "GOAT MILK PREMIX", initial: 0, sold: 0, price: 15.00},
+        {code: "DRC3804", name: "DYNA TONIC 780ml", initial: 0, sold: 0, price: 33.00},
+        {code: "DRC3809", name: "YEE YANG YEN 90's", initial: 0, sold: 0, price: 23.00},
+        {code: "DRC3810", name: "RED GINSENG COFFEE", initial: 0, sold: 0, price: 13.00},
+        {code: "DRC3812", name: "GREEN TEA CAPSULE 60's", initial: 0, sold: 0, price: 23.00},
+        {code: "DRC3814", name: "PROLINK 20's", initial: 0, sold: 0, price: 36.00},
+        {code: "DRC4803", name: "GINSENG HONEY & GINGER", initial: 0, sold: 0, price: 17.00},
+        {code: "DRC4805", name: "GINSENG CAPSULE 90s", initial: 0, sold: 0, price: 31.00},
+        {code: "DRC4810", name: "TONGKAT ALI COFFEE (20s)", initial: 0, sold: 0, price: 11.00},
+        {code: "DRC4811", name: "GINALI CAPSULE 100's", initial: 0, sold: 0, price: 27.00},
+        {code: "DRC4815", name: "YEEGINKGO TABLET 90's", initial: 0, sold: 0, price: 23.00},
+        {code: "DRC4817", name: "MILK THISTLE 120's", initial: 0, sold: 0, price: 36.00},
+        {code: "DRC4821", name: "TONGKAT ALI 100's", initial: 0, sold: 0, price: 21.00},
+        {code: "DRC4824", name: "SEA CUCUMBER JELLY", initial: 0, sold: 0, price: 31.00},
+        {code: "DRC5802N", name: "NONI 500ml", initial: 0, sold: 0, price: 26.00},
+        {code: "DRC5803", name: "NONI PLUS TEA 30's", initial: 0, sold: 0, price: 19.00},
+        {code: "DRC5806", name: "DYNA 'S' TABLET 120's", initial: 0, sold: 0, price: 21.00},
+        {code: "DRC9918", name: "DYNA SERENOA 100's", initial: 0, sold: 0, price: 32.00}
     ];
+
+    function calculate(index) {
+        const initVal = parseInt(document.getElementById(`init-${index}`).value) || 0;
+        const soldVal = parseInt(document.getElementById(`sold-${index}`).value) || 0;
+        const remaining = initVal - soldVal;
+        
+        document.getElementById(`rem-${index}`).innerText = remaining;
+        
+        // Save to data array
+        products[index].initial = initVal;
+        products[index].sold = soldVal;
+    }
 
     function displayProducts() {
         const body = document.getElementById('tableBody');
-        body.innerHTML = products.map(p => {
-            const remaining = p.initial - p.afm;
-            return `
-                <tr>
-                    <td class="code-cell">${p.code}</td>
-                    <td>${p.name}</td>
-                    <td class="stock-cell">${p.initial}</td>
-                    <td class="stock-cell">${p.afm}</td>
-                    <td class="stock-cell" style="color: var(--red)">${remaining}</td>
-                    <td class="price-cell">$${p.price.toFixed(2)}</td>
-                </tr>
-            `;
-        }).join('');
+        body.innerHTML = products.map((p, index) => `
+            <tr>
+                <td class="code-cell">${p.code}</td>
+                <td>${p.name}</td>
+                <td style="text-align: center;">
+                    <input type="number" class="qty-input" id="init-${index}" value="${p.initial}" oninput="calculate(${index})">
+                </td>
+                <td style="text-align: center;">
+                    <input type="number" class="qty-input" id="sold-${index}" value="${p.sold}" oninput="calculate(${index})">
+                </td>
+                <td class="remaining-val" id="rem-${index}">${p.initial - p.sold}</td>
+                <td class="price-cell">$${p.price.toFixed(2)}</td>
+            </tr>
+        `).join('');
     }
 
     function filterTable() {
@@ -145,33 +157,41 @@
     function generatePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
+        const date = new Date().toLocaleDateString();
+
         doc.setFontSize(18);
-        doc.setTextColor(217, 48, 37);
-        doc.text("INVENTAIRE ET PRIX DES PRODUITS", 105, 20, { align: "center" });
+        doc.setTextColor(0, 70, 173);
+        doc.text("RAPPORT D'INVENTAIRE JOURNALIER", 105, 20, { align: "center" });
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`Date: ${date} | Responsable: ARSHAD`, 105, 28, { align: "center" });
         
         const tableData = products.map(p => [
             p.code, 
             p.name, 
             p.initial, 
-            p.afm, 
-            (p.initial - p.afm), 
+            p.sold, 
+            (p.initial - p.sold), 
             "$" + p.price.toFixed(2)
         ]);
 
         doc.autoTable({
-            startY: 30,
-            head: [['CODE', 'DÉSIGNATION', 'INIT.', 'AFM', 'RESTE', 'PRIX']],
+            startY: 35,
+            head: [['CODE', 'DÉSIGNATION', 'INITIAL', 'VENDU', 'RESTE', 'PRIX']],
             body: tableData,
             headStyles: { fillColor: [0, 70, 173] },
+            theme: 'grid',
             styles: { fontSize: 8 },
             columnStyles: {
                 2: { halign: 'center' },
                 3: { halign: 'center' },
-                4: { halign: 'center' },
+                4: { halign: 'center', fontStyle: 'bold' },
                 5: { halign: 'right' }
             }
         });
-        doc.save("Inventaire_Arshad_2026.pdf");
+        
+        doc.save(`Rapport_Stock_${date}.pdf`);
     }
 
     displayProducts();
