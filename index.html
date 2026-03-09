@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Management Stock - ARSHAD</title>
+    <title>Management Stock - </title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -10,7 +10,7 @@
         :root { --blue: #0046ad; --red: #d93025; --green: #2e7d32; --text: #333; }
         body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; color: var(--text); }
         
-        .container { max-width: 1000px; margin: auto; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .container { max-width: 1100px; margin: auto; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
         
         .header { background: var(--blue); color: white; padding: 20px; text-align: center; }
         .header h1 { margin: 0; font-size: 22px; text-transform: uppercase; }
@@ -19,7 +19,7 @@
         #searchInput { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
 
         .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #f8f9fa; color: var(--blue); padding: 12px 10px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; text-align: left; }
         td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 14px; }
         
@@ -42,7 +42,7 @@
 <div class="container">
     <div class="header">
         <h1>Gestion de Stock Journalière</h1>
-        <p>ARSHAD — Rapport d'Inventaire</p>
+        <p> — Rapport d'Inventaire Complet</p>
     </div>
 
     <div class="search-box">
@@ -66,12 +66,12 @@
     </div>
 
     <div class="actions">
-        <button class="btn-pdf" onclick="generatePDF()">📄 GENERER RAPPORT PDF POUR PATRON</button>
+        <button class="btn-pdf" onclick="generatePDF()">📄 GENERER RAPPORT PDF AVEC PRIX TOTAL</button>
     </div>
 </div>
 
 <div class="footer">
-    Developed by: <b>ARSHAD</b> | System Live Update 2026
+    Developed by: <b>ARSHAD</b> | 2026 Inventory System
 </div>
 
 <script>
@@ -159,41 +159,44 @@
 
         doc.setFontSize(18);
         doc.setTextColor(0, 70, 173);
-        doc.text("RAPPORT D'INVENTAIRE ARSHAD", 105, 20, { align: "center" });
+        doc.text("RAPPORT D'INVENTAIRE ", 105, 20, { align: "center" });
         
         doc.setFontSize(10);
         doc.setTextColor(100);
-        doc.text(`Date: ${date}`, 105, 28, { align: "center" });
+        doc.text(`Date: ${date} | Rapport de Ventes Journalières`, 105, 28, { align: "center" });
 
-        // Logic to show blank if value is 0
         const tableData = products.map(p => {
             const remaining = p.initial - p.sold;
+            const totalPrice = p.sold * p.price; // Calculation for total
+            
             return [
                 p.code, 
                 p.name, 
                 "$" + p.price.toFixed(2),
                 p.initial === 0 ? "" : p.initial, 
                 p.sold === 0 ? "" : p.sold, 
-                remaining === 0 ? "" : remaining
+                remaining === 0 ? "" : remaining,
+                p.sold > 0 ? "$" + totalPrice.toFixed(2) : "" // Blank if nothing sold
             ];
         });
 
         doc.autoTable({
             startY: 35,
-            head: [['CODE', 'DÉSIGNATION', 'PRIX', 'INITIAL', 'VENDU', 'RESTE']],
+            head: [['CODE', 'DÉSIGNATION', 'PRIX UNIT.', 'INITIAL', 'VENDU', 'RESTE', 'PRIX TOTAL']],
             body: tableData,
             headStyles: { fillColor: [0, 70, 173] },
             theme: 'grid',
-            styles: { fontSize: 8 },
+            styles: { fontSize: 7.5 }, // Slightly smaller font to fit extra column
             columnStyles: {
                 2: { halign: 'right' },
                 3: { halign: 'center' },
                 4: { halign: 'center' },
-                5: { halign: 'center', fontStyle: 'bold' }
+                5: { halign: 'center', fontStyle: 'bold' },
+                6: { halign: 'right', fontStyle: 'bold', textColor: [46, 125, 50] } // Green for total
             }
         });
         
-        doc.save(`Rapport_ARSHAD_${date}.pdf`);
+        doc.save(`Rapport_Final_${date}.pdf`);
     }
 
     displayProducts();
