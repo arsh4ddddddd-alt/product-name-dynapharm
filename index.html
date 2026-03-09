@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Management Stock -</title>
+    <title>Management Stock - ARSHAD</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -23,7 +23,6 @@
         th { background: #f8f9fa; color: var(--blue); padding: 12px 10px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; text-align: left; }
         td { padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 14px; }
         
-        /* Input Styling */
         .qty-input { width: 60px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-weight: bold; }
         .qty-input:focus { border-color: var(--blue); outline: none; background: #e3f2fd; }
         
@@ -31,8 +30,8 @@
         .code-cell { font-family: monospace; font-weight: bold; color: var(--red); }
         .price-cell { font-weight: bold; text-align: right; color: var(--green); }
 
-        .actions { padding: 20px; display: grid; grid-template-columns: 1fr; gap: 10px; background: #f8f9fa; }
-        .btn-pdf { background: var(--red); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .actions { padding: 20px; background: #f8f9fa; }
+        .btn-pdf { background: var(--red); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; transition: 0.3s; }
         .btn-pdf:hover { background: #b71c1c; }
         
         .footer { text-align: center; padding: 20px; font-size: 11px; color: #888; }
@@ -43,7 +42,7 @@
 <div class="container">
     <div class="header">
         <h1>Gestion de Stock Journalière</h1>
-        <p>ARSHAD — Daily Inventory Control</p>
+        <p>ARSHAD — Rapport d'Inventaire</p>
     </div>
 
     <div class="search-box">
@@ -56,10 +55,10 @@
                 <tr>
                     <th>Code</th>
                     <th>Désignation</th>
-                    <th style="text-align: center;">Stock Initial</th>
-                    <th style="text-align: center;">Vendu (Sold)</th>
-                    <th style="text-align: center;">Restant</th>
                     <th style="text-align: right;">Prix Unit.</th>
+                    <th style="text-align: center;">Stock Initial</th>
+                    <th style="text-align: center;">Vendu</th>
+                    <th style="text-align: center;">Restant</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -122,7 +121,6 @@
         
         document.getElementById(`rem-${index}`).innerText = remaining;
         
-        // Save to data array
         products[index].initial = initVal;
         products[index].sold = soldVal;
     }
@@ -133,14 +131,14 @@
             <tr>
                 <td class="code-cell">${p.code}</td>
                 <td>${p.name}</td>
+                <td class="price-cell">$${p.price.toFixed(2)}</td>
                 <td style="text-align: center;">
-                    <input type="number" class="qty-input" id="init-${index}" value="${p.initial}" oninput="calculate(${index})">
+                    <input type="number" class="qty-input" id="init-${index}" value="${p.initial === 0 ? '' : p.initial}" placeholder="0" oninput="calculate(${index})">
                 </td>
                 <td style="text-align: center;">
-                    <input type="number" class="qty-input" id="sold-${index}" value="${p.sold}" oninput="calculate(${index})">
+                    <input type="number" class="qty-input" id="sold-${index}" value="${p.sold === 0 ? '' : p.sold}" placeholder="0" oninput="calculate(${index})">
                 </td>
                 <td class="remaining-val" id="rem-${index}">${p.initial - p.sold}</td>
-                <td class="price-cell">$${p.price.toFixed(2)}</td>
             </tr>
         `).join('');
     }
@@ -161,37 +159,41 @@
 
         doc.setFontSize(18);
         doc.setTextColor(0, 70, 173);
-        doc.text("RAPPORT D'INVENTAIRE JOURNALIER", 105, 20, { align: "center" });
+        doc.text("RAPPORT D'INVENTAIRE ARSHAD", 105, 20, { align: "center" });
         
         doc.setFontSize(10);
         doc.setTextColor(100);
-        doc.text(`Date: ${date} | Responsable: JIBRAIL`, 105, 28, { align: "center" });
-        
-        const tableData = products.map(p => [
-            p.code, 
-            p.name, 
-            p.initial, 
-            p.sold, 
-            (p.initial - p.sold), 
-            "$" + p.price.toFixed(2)
-        ]);
+        doc.text(`Date: ${date}`, 105, 28, { align: "center" });
+
+        // Logic to show blank if value is 0
+        const tableData = products.map(p => {
+            const remaining = p.initial - p.sold;
+            return [
+                p.code, 
+                p.name, 
+                "$" + p.price.toFixed(2),
+                p.initial === 0 ? "" : p.initial, 
+                p.sold === 0 ? "" : p.sold, 
+                remaining === 0 ? "" : remaining
+            ];
+        });
 
         doc.autoTable({
             startY: 35,
-            head: [['CODE', 'DÉSIGNATION', 'INITIAL', 'VENDU', 'RESTE', 'PRIX']],
+            head: [['CODE', 'DÉSIGNATION', 'PRIX', 'INITIAL', 'VENDU', 'RESTE']],
             body: tableData,
             headStyles: { fillColor: [0, 70, 173] },
             theme: 'grid',
             styles: { fontSize: 8 },
             columnStyles: {
-                2: { halign: 'center' },
+                2: { halign: 'right' },
                 3: { halign: 'center' },
-                4: { halign: 'center', fontStyle: 'bold' },
-                5: { halign: 'right' }
+                4: { halign: 'center' },
+                5: { halign: 'center', fontStyle: 'bold' }
             }
         });
         
-        doc.save(`Rapport_Stock_${date}.pdf`);
+        doc.save(`Rapport_ARSHAD_${date}.pdf`);
     }
 
     displayProducts();
